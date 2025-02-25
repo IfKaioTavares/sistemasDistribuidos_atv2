@@ -9,11 +9,12 @@ export class ElectionService {
   constructor(node: Node, ports: number[]) {
       this.node = node;
       this.ports = ports;
-      this.initializeLeader();
-      this.startSimulation();
-      this.startHeartbeat();
+      this.initializeLeader(); // Definição do líder inicial (eleição)
+      this.startSimulation();  // Simulação de falhas (eleição)
+      this.startHeartbeat();   // Início do monitoramento por heartbeat
   }
 
+  // === Algoritmo de Eleição ===
   async initializeLeader(): Promise<void> {
       const allNodes = [...this.ports, this.node.id];
       const highestId = Math.max(...allNodes);
@@ -65,6 +66,7 @@ export class ElectionService {
       await this.declareLeadership();
   }
 
+  // === Simulação de falhas e recuperação (Relacionado à Eleição) ===
   async failNode(): Promise<void> {
       this.node.isAlive = false;
       console.log(`❌ [Nó ${this.node.id}] Falhou!`);
@@ -88,6 +90,7 @@ export class ElectionService {
       }, 15000);
   }
 
+  // === Mecanismo de Heartbeat (Detecção de Falhas) ===
   startHeartbeat(): void {
     setInterval(async () => {
         if (this.node.isAlive && 
@@ -98,11 +101,10 @@ export class ElectionService {
                 await axios.get(`http://localhost:${this.node.leaderId}/heartbeat`);
             } catch (error) {
                 console.log(`💔 [Nó ${this.node.id}] Líder ${this.node.leaderId} não respondeu. Iniciando eleição...`);
-                await this.startElection();
+                await this.startElection(); // Se o líder falhar, inicia nova eleição
             }
         }
     }, this.HEARTBEAT_INTERVAL);
-
   }
 
   getNode() {
